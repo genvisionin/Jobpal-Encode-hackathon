@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Generic job application fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>Apply for Product Manager</h1>
+      <form>
+        <label for="name">Full name</label>
+        <input id="name" name="name" autocomplete="name" />
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" />
+
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" autocomplete="tel" />
+
+        <label for="linkedin">LinkedIn</label>
+        <input id="linkedin" name="linkedin" />
+
+        <label for="why">Why do you want to work here?</label>
+        <textarea id="why" name="why"></textarea>
+
+        <label for="visa">Will you now or in the future require visa sponsorship?</label>
+        <select id="visa" name="visa">
+          <option value="">Select</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+
+        <label for="ethnicity">What is your ethnic group?</label>
+        <select id="ethnicity" name="ethnicity">
+          <option value="">Prefer not to say</option>
+          <option value="asian">Asian or Asian British</option>
+          <option value="black">Black, African, Caribbean or Black British</option>
+          <option value="mixed">Mixed or multiple ethnic groups</option>
+          <option value="white">White</option>
+          <option value="other">Other ethnic group</option>
+        </select>
+
+        <button type="submit">Submit application</button>
+      </form>
+    </main>
+  </body>
+</html>

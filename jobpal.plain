@@ -1,0 +1,463 @@
+---
+description: >
+  Jobpal is a career operating system for job seekers. It keeps one trusted
+  career profile, tailors resumes and cover letters to a role, discovers relevant
+  live jobs, tracks applications from Gmail, prepares users for interviews, and
+  helps fill job application forms through a Chromium extension.
+---
+
+***definitions***
+
+- :App: is the Jobpal career operating system for job seekers.
+
+- :User: is a job seeker using :App: to manage applications and profile.
+
+- :FallbackMode: is the deterministic local behavior :App: uses when optional
+  service credentials are unavailable.
+  - Used for profile extraction, resume generation, and job discovery.
+  - Produces honest demo data instead of failures.
+
+- :AuthSession: is the authenticated session for a :User: in :App:.
+  - Created at sign-in via Supabase Auth (when configured) or local demo auth.
+  - Tracks the :User: identity across screens and API calls.
+
+- :CareerProfile: is the master profile for a :User:, the source of truth for
+  all generated documents and recommendations.
+  - Contains contact details, professional summary, skills, work experience,
+    education, and projects.
+  - Sections can be edited individually.
+  - Required fields must be present before resume generation.
+  - Optional sections can remain empty.
+
+- :ResumeSourceFile: is an uploaded resume file from :User: in PDF or DOCX
+  format.
+  - Extracted into text before conversion to :CareerProfile:.
+  - Rejected if empty or unsupported format.
+
+- :ProfileExtraction: is the conversion of extracted resume text into a
+  structured :CareerProfile:.
+  - Uses Azure AI Foundry when configured; deterministic mock when not.
+  - Produces a profile ready for user review and editing.
+
+- :JobDescription: is the text of a job posting provided by :User: as either
+  pasted text or a URL.
+  - Extracted from supported public job pages when provided as URL.
+  - Falls back to pasted text if URL extraction fails.
+  - Rejected if empty or too vague.
+
+- :ResumeTemplate: is an ATS-friendly resume layout option :User: can choose.
+  - Determines visual presentation of a :TailoredResume:.
+  - Multiple templates available; :User: can switch and preview instantly.
+
+- :TailoredResume: is a resume generated from :CareerProfile: and
+  :JobDescription: for a specific role.
+  - Preserves truthful employers, dates, education, and achievements.
+  - Rewords existing experience with role-specific language.
+  - Never invents missing facts.
+  - Uses chosen :ResumeTemplate: for formatting.
+
+- :CoverLetter: is a cover letter generated from :CareerProfile: and
+  :JobDescription: for a specific role.
+  - Avoids copying :TailoredResume: bullets verbatim.
+  - Uses role-specific motivation and fit.
+  - Never introduces unverified claims.
+
+- :SavedResume: is a :TailoredResume: and :CoverLetter: pair saved by :User:
+  for later reference.
+  - Stores company name, role title, template choice, and creation timestamp.
+  - Can be reopened and regenerated.
+  - Identified by ID; missing resumes return not-found states.
+
+- :JobSource: is a public job board or ATS offering direct job listings.
+  - Supported sources include Greenhouse, Lever, Ashby, Workable,
+    SmartRecruiters.
+
+- :JobPosting: is a job listing from a :JobSource:.
+  - Normalized into a common shape across all sources.
+  - Never fabricated; always from live provider data.
+
+- :JobAlertFilter: is the configuration :User: creates to discover jobs.
+  - Supports keywords, location, country, arrangement, type, salary, level.
+  - Keywords can be inferred from :CareerProfile: if left empty.
+  - Invalid salary and location filters are rejected.
+
+- :JobMatchScore: is the confidence score for how well a :JobPosting: matches
+  :CareerProfile:.
+  - Calculated from profile data; lower confidence when data is missing.
+  - Used to rank jobs in alerts.
+
+- :ApplicationTracker: is the record of job applications for :User:, sourced
+  both manually and from Gmail.
+  - Manually entered applications are created and edited by :User:.
+  - Gmail-derived applications are auto-extracted from hiring emails.
+
+- :TrackedApplication: is a single application entry tracking a job search.
+  - Contains company name, role title, :ApplicationStatus:, and timestamps.
+  - Can be manually created and edited by :User:.
+  - Can be auto-updated from :EmailMessage: analysis.
+
+- :ApplicationStatus: is one of five statuses for a :TrackedApplication:.
+  - Applied, In Review, Interview, Decision, Archived.
+
+- :EmailMessage: is a message from Gmail linked to a :TrackedApplication:.
+  - Extracted read-only via Gmail OAuth.
+  - Classified to identify hiring company, ATS vendor, and intent.
+  - Kept idempotent by message ID to prevent duplicates.
+
+- :TrackerSync: is the process of refreshing :ApplicationTracker: with new
+  :EmailMessage: entries from Gmail.
+  - Only syncs after Gmail connection.
+  - Updates :TrackedApplication: status when emails indicate progress.
+
+- :InterviewPrep: is preparation material generated for a :TrackedApplication:.
+  - Includes company context, role themes, likely questions, talking points.
+  - Lower-confidence note when company data is missing.
+  - Does not change application status.
+
+- :BillingPlan: is a subscription tier offering a monthly quota of tailored
+  documents.
+  - Free and paid plans defined.
+  - Quota consumed only after successful generation.
+
+- :UsageQuota: is the monthly document-generation quota for a :User: under a
+  :BillingPlan:.
+  - Enforced before generation; not consumed on validation or provider failures.
+  - Displayed after successful generation.
+
+- :MagicFillExtension: is the Chromium extension that auto-fills job
+  application forms.
+  - Manifest V3 package; separate from web app.
+  - Detects form fields and maps to :CareerProfile: values.
+
+- :ExtensionSession: is the authenticated session for :MagicFillExtension:.
+  - Exchanged from web auth; refreshable via refresh credentials.
+  - Revokable; blocks profile and document access after revocation.
+
+- :DetectedField: is a form field on a job application detected by
+  :MagicFillExtension:.
+  - Mapped to :CareerProfile: values.
+  - High-confidence fields are auto-fillable.
+  - Ambiguous fields are kept for user review.
+
+- :FieldMemory: is stored field mapping history for :DetectedField: on a
+  specific website.
+  - Used to improve :DetectedField: detection on repeated visits.
+
+- :ProductScreenMap: is the inventory of :App: screens and their purposes.
+  - Documents user journeys and entry points.
+
+- :ProductApiMap: is the inventory of :App: API routes and their expected
+  purposes.
+  - Documents all backend surfaces.
+
+***implementation reqs***
+
+- :Implementation: should be in TypeScript with strict mode enabled.
+
+- :Implementation: should use Next.js App Router (not Pages router) for all
+  screens and API routes.
+
+- :Implementation: should use React for client-side component rendering and
+  interactivity.
+
+- :Implementation: should use Zod for runtime validation of profile, resume,
+  job, cover letter, and tracker data.
+
+- :Implementation: should use Supabase Postgres as the primary persistent
+  storage when Supabase credentials are configured.
+
+- :Implementation: should fall back to local JSON file storage (in-memory or
+  local filesystem) when Supabase credentials are unavailable.
+
+- :Implementation: should use Supabase Auth for sign-in and session management
+  when configured, and local ephemeral sessions for demo mode.
+
+- :Implementation: should use Azure AI Foundry for LLM tasks (profile
+  extraction, resume/cover letter generation, interview prep) when credentials
+  are available.
+
+- :Implementation: should use deterministic mock generation (hardcoded sample
+  data) for LLM tasks when Azure credentials are unavailable.
+
+- :Implementation: should integrate directly with Greenhouse, Lever, Ashby,
+  Workable, and SmartRecruiters public job listing APIs for job discovery.
+
+- :Implementation: should use Gmail read-only OAuth for application tracking
+  and email sync.
+
+- :Implementation: should use Dodo Payments for checkout and customer portal
+  when API key is configured, and local billing simulation-only mode when
+  unavailable.
+
+- :Implementation: should use Cloudflare R2 for archival storage of original
+  uploaded resume files when credentials are present; skip upload to R2 when
+  unavailable without breaking the resume upload flow.
+
+- :Implementation: should organize source code as follows:
+  - `src/app/` contains Next.js App Router pages, layouts, and API routes.
+  - `src/components/` contains reusable UI, layout, auth, and resume-editing
+    components.
+  - `src/lib/schema/` contains Zod schemas for all domain models.
+  - `src/lib/db/` contains store abstraction interface and concrete
+    implementations (Supabase and local JSON).
+  - `src/lib/llm/` contains Azure AI Foundry client and mock LLM client.
+  - `src/lib/parsing/` contains text extraction from uploaded resumes and job
+    URLs.
+  - `src/lib/templates/` contains ATS-friendly resume layout templates.
+  - `src/lib/jobs/` contains job discovery, normalization, deduplication,
+    filtering, and scoring logic.
+  - `src/lib/tracker/` contains Gmail connection, email classification,
+    message linking, and sync logic.
+  - `src/lib/billing/` contains plan definitions, quota enforcement, checkout,
+    customer portal, and webhook handling.
+  - `src/lib/extension/` contains extension session auth, field detection,
+    field memory, and magic-fill logic.
+  - `extension/` is a separate Chromium Manifest V3 package, built with Vite,
+    independent of the web app.
+
+- :Implementation: should run the web app on port 3002.
+
+- :Implementation: should never expose service-role keys, OAuth secrets,
+  provider tokens, or billing secrets to client-side code.
+
+- :Implementation: should store all OAuth tokens server-side; never transmit
+  them to the browser.
+
+***functional specs***
+
+- Resolve :AuthSession: and enforce sign-in on private screens.
+  - Before rendering any screen behind authentication, resolve the signed-in
+    :User: from :AuthSession:.
+  - If no :AuthSession: exists, redirect unauthenticated browser requests to
+    /login.
+  - This applies to all screens except /login itself.
+  - API routes do not redirect; see the next auth specs for API error handling.
+
+- Create and manage local demo :AuthSession: when Supabase Auth is not
+  configured.
+  - When :App: starts without Supabase Auth credentials, create an ephemeral
+    :AuthSession: for a demo :User: with a randomized session ID.
+  - The demo :User: can use all :App: functionality identically to a real
+    :User:.
+  - All demo data is stored in memory or local storage and is lost when the
+    session ends.
+  - The UI should visibly label all screens as demo mode.
+
+- Return JSON authorization errors from all API routes.
+  - Every API route returns structured JSON error responses instead of HTML
+    redirects.
+  - On missing or invalid :AuthSession:, return HTTP 401 Unauthorized with a
+    JSON body containing an error code and message.
+  - On valid :AuthSession: but insufficient permissions to access another
+    :User:'s data, return HTTP 403 Forbidden with a JSON body containing an
+    error code and message.
+
+- Scope all user data reads and writes to the authenticated :User:.
+  - Every API route that accesses, modifies, or returns profile, resumes,
+    tracker, billing, or extension data validates that the requested :User: ID
+    matches the authenticated :AuthSession:.
+  - If the IDs do not match, return HTTP 403 Forbidden.
+  - This applies to all CRUD operations (create, read, update, delete) on
+    user-scoped resources.
+
+- Display onboarding entry screen where :User: chooses upload or manual
+  profile entry.
+  - On the /onboarding screen, present two options: "Upload Resume" (goes to
+    /intake) and "Build Manually" (goes to /builder).
+  - Either choice leads to :CareerProfile: creation.
+
+- Accept resume file upload in PDF or DOCX format.
+  - On /intake, accept file uploads; reject empty files, unsupported formats,
+    and files >10MB with clear error messages before parsing.
+
+- Extract text from uploaded :ResumeSourceFile:.
+  - Parse PDF and DOCX files to extract plain text.
+  - Handle parse errors with a user-facing message.
+  - Do not proceed if text extraction fails.
+
+- Convert extracted resume text to structured :CareerProfile: using LLM or
+  mock.
+  - Send extracted text to Azure AI Foundry to identify contact details,
+    summary, skills, experience, education, projects.
+  - Use deterministic mock data when Azure credentials are unavailable.
+  - Present results as editable defaults on /builder.
+
+- Let :User: enter career story as free-form text and convert to
+  :CareerProfile:.
+  - On /builder (manual path), accept multi-line text entry for career
+    narrative.
+  - Send to Azure (or use mock) to extract structure.
+  - Present results as editable fields.
+
+- Show :CareerProfile: fields for review and editing on /builder.
+  - Display all profile sections (contact, summary, skills, experience,
+    education, projects) with extracted/mock values pre-filled and directly
+    editable.
+  - Let :User: add, remove, or modify entries in each section.
+
+- Validate :CareerProfile: and show errors for required fields.
+  - Require contact details (name, email), summary, skills, and work
+    experience before :User: can proceed to generate resumes.
+  - Show clear errors for missing required fields.
+
+- Allow optional profile sections to remain empty.
+  - Projects and education are optional.
+  - Do not block generation if empty.
+  - Let :User: skip or fill them later.
+
+- Save :CareerProfile: edits and persist before resume generation.
+  - When :User: clicks save or proceeds to generation, persist all edited
+    profile fields to the database (or local storage in demo mode).
+  - Persist before any generation step uses the profile.
+
+- Let :User: input :JobDescription: via paste or URL.
+  - On /customize, accept either pasted text or a URL to a public job posting.
+  - Validate that at least one is provided.
+
+- Extract :JobDescription: text from supported public job pages.
+  - When :User: provides a URL, attempt to scrape and extract the job
+    description text.
+  - Supported sources: Greenhouse, Lever, Ashby, Workable, SmartRecruiters.
+  - If extraction fails, notify :User: and allow fallback to pasted text.
+
+- Fall back to pasted :JobDescription: when URL extraction fails or source
+  unsupported.
+  - If URL scraping fails or the domain is unsupported, use the pasted job
+    description text if provided.
+  - If neither extraction nor paste succeeded, return an error.
+
+- Reject empty or vague :JobDescription: with clear guidance.
+  - Validate that :JobDescription: is non-empty and contains recognizable
+    job-related keywords (title, responsibilities, requirements).
+  - Reject with user-facing message if too vague.
+
+- Generate :TailoredResume: from :CareerProfile: and :JobDescription:.
+  - Use Azure AI Foundry to create a resume tailored to the job.
+  - Preserve truthful employers, dates, education, projects, achievements.
+  - Reword existing experience with role-specific language.
+  - Never invent missing facts.
+  - Use :FallbackMode: mock if Azure unavailable.
+
+- Let :User: choose :ResumeTemplate: for :TailoredResume: formatting and
+  preview instantly.
+  - Display available ATS-friendly templates.
+  - When :User: selects a template, update the live preview immediately.
+
+- Generate :CoverLetter: using :CareerProfile: and :JobDescription:.
+  - Create a cover letter for the same role.
+  - Avoid copying :TailoredResume: bullets verbatim.
+  - Use role-specific motivation and fit.
+  - Use Azure or :FallbackMode: mock as needed.
+
+- Support flexible document generation (resume-only, cover-letter-only, or
+  both).
+  - Allow :User: to choose which documents to generate in a single call.
+  - Return only the selected documents.
+  - Both are optional but at least one must be selected.
+
+- Save :SavedResume: with company, role, template choice, and creation
+  timestamp.
+  - After generation, let :User: save the resume pair.
+  - Store company name, role title, template name, and creation time.
+  - Identify :SavedResume: by unique ID.
+
+- Allow :User: to reopen and regenerate saved :SavedResume: entries.
+  - From /resumes screen, :User: can view, edit metadata (company, role),
+    and regenerate a saved resume.
+  - Can regenerate with the same or different :JobDescription:.
+
+- Return not-found state for missing or deleted :SavedResume:.
+  - If :User: requests a :SavedResume: by ID that does not exist, return a
+    404 with clear message.
+
+- Provide PDF export for :TailoredResume: and :CoverLetter:.
+  - Generate downloadable PDF versions of both documents.
+  - Preserve formatting and ATS-friendliness.
+
+- Enforce monthly tailored-document quota before generation.
+  - Before generating any resume or cover letter, check :UsageQuota: against
+    :BillingPlan:.
+  - If quota exhausted, show user error with upgrade link.
+  - Do not generate.
+
+- Consume quota only after successful generation.
+  - Quota is consumed only after documents are successfully generated.
+  - Validation errors, scraping failures, or provider failures do not consume
+    quota.
+
+- Integrate Dodo checkout and customer portal when configured.
+  - When Dodo API key is present, wire /api/billing/checkout to Dodo checkout
+    flow.
+  - Wire /api/billing/portal to customer portal.
+  - Use local simulation-only mode when Dodo unavailable.
+
+- Configure :JobAlertFilter: with keywords, location, level, type.
+  - Let :User: set keywords (inferred from :CareerProfile: if empty),
+    location, country, arrangement, salary range, job level.
+  - Validate location and salary before calling providers.
+
+- Query Greenhouse, Lever, Ashby, Workable, SmartRecruiters for jobs.
+  - Call all configured :JobSource: endpoints in parallel.
+  - Normalize results to common :JobPosting: shape.
+  - Deduplicate by title + company across sources.
+
+- Score and rank :JobPosting: against :CareerProfile: and show results.
+  - Score each job using profile data.
+  - Lower confidence when profile data is missing.
+  - Display in ranked order.
+  - Show partial results if one provider fails.
+  - Show empty state if no jobs found.
+
+- Let :User: manually create and edit :TrackedApplication: entries.
+  - On /tracker, accept company, role, and :ApplicationStatus: as required fields.
+  - Allow :User: to create new entries or edit existing ones.
+  - Manual edits take priority over automated guesses from emails.
+
+- Connect Gmail with read-only OAuth and sync :EmailMessage: entries.
+  - Show disabled state when Google OAuth is not configured.
+  - On connection, sync new messages from Gmail and classify each.
+  - Link messages to :TrackedApplication: where possible using company/hiring
+    keywords.
+  - Keep processing idempotent by message ID; do not create duplicates.
+
+- Update :ApplicationStatus: when :EmailMessage: indicate progress.
+  - Parse emails for signals (interview offer, rejection, review confirmation).
+  - Update status accordingly (applied → interview, applied → rejected, etc.).
+
+- Generate :InterviewPrep: from tracked application.
+  - Include company context, role themes, likely questions, talking points.
+  - Lower-confidence note when company data is missing.
+  - Do not change :ApplicationStatus: when generating.
+
+- Define :MagicFillExtension: as separate Manifest V3 package.
+  - Extension authenticates via :ExtensionSession: from web app.
+  - Detects form fields on job application pages.
+  - Maps fields to :CareerProfile: values and suggests fills.
+  - High-confidence fields are auto-fillable; ambiguous ones kept for review.
+
+- Exchange web auth for :ExtensionSession: and support refresh + revoke.
+  - /api/extension/auth/exchange trades web session for extension session.
+  - :ExtensionSession: is refreshable when credentials exist.
+  - Revoke endpoint blocks profile and document access after revocation.
+
+***test reqs***
+
+- :UnitTests: should use Jest framework for the web app.
+
+- :UnitTests: should be located in `src/**/*.test.ts` and `src/**/*.test.tsx`
+  files alongside implementation.
+
+- :ConformanceTests: should use Jest + Supertest for HTTP API testing.
+
+- :ConformanceTests: should be located in `conformance_tests/` directory
+  organized by feature.
+
+- :ConformanceTests: should test all API routes against a running local Next.js
+  server.
+
+- :ConformanceTests: should verify that :CareerProfile:, :TailoredResume:,
+  :CoverLetter:, :SavedResume:, :JobPosting:, :TrackedApplication:, and
+  :BillingPlan: endpoints conform to the functional spec behavior.
+
+- :ConformanceTests: should use mocked external services (Azure, Gmail,
+  Greenhouse, etc.) or sandbox credentials when testing locally.

@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-trackers",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/discover-boards",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

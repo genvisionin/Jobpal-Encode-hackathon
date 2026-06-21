@@ -1,0 +1,6 @@
+# CodePlain configuration for Jobpal
+# Web app + Chromium extension project
+
+unittests-script: test_scripts/run_unittests_web.sh
+conformance-tests-script: test_scripts/run_conformance_tests_web.sh
+prepare-environment-script: test_scripts/prepare_environment_web.sh

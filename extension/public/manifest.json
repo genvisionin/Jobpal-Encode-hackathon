@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Jobpal Magic Fill",
+  "description": "Fill job application forms from your grounded Jobpal profile.",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "Jobpal Magic Fill",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "assets/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["assets/content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["activeTab", "scripting", "storage", "identity", "tabs", "downloads"],
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost:3002/*",
+    "https://jobpal.app/*",
+    "https://*.vercel.app/*"
+  ],
+  "commands": {
+    "jobpal-magic-fill": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+A",
+        "mac": "MacCtrl+Shift+A"
+      },
+      "description": "Run Jobpal Magic Fill on the current page"
+    }
+  }
+}
