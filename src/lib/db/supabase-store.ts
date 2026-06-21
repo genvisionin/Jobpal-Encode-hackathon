@@ -174,7 +174,7 @@ export class SupabaseStore implements JobpalStore {
       customization_plan: cv.customizationPlan ?? [],
       cover_letter: cv.coverLetter ?? null,
     };
-    // Try with the career-ops analysis columns; gracefully fall back to the
+    // Try with the analysis columns; gracefully fall back to the
     // stable columns if the DB hasn't been migrated to include them yet.
     const { error } = await this.client.from("tailored_cvs").upsert({ ...base, ...analysis });
     if (error) {

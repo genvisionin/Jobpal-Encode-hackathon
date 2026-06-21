@@ -30,7 +30,7 @@ Return ONLY JSON with this exact shape:
     "other_job",                  // job-related but no status change
     "not_job"                     // newsletters, marketing, job ALERTS digests, personal mail
   ],
-  "company": string,              // hiring company (NOT the ATS vendor like Greenhouse/Lever)
+  "company": string,              // actual hiring company name (not the ATS platform name)
   "role": string,                 // job title applied for, "" if unknown
   "stage": 0|1|2|3,               // 0 Applied, 1 In review, 2 Interview, 3 Decision
   "outcome": "offer"|"rejected"|null,

@@ -65,8 +65,7 @@ export async function ingestResumeFile(
   const stored = await storeOriginalFile(file.buffer, file.filename, file.mime).catch(() => null);
 
   // Derive the "career intelligence" layer (archetypes + narrative + proof
-  // points) from the parsed resume — the career-ops `_profile.md` +
-  // `article-digest.md` equivalent. This is required for high-quality
+  // points) from the parsed resume. Required for high-quality
   // tailoring, so production model failures should surface instead of silently
   // saving a weak profile.
   const { data: insights } = await deriveInsights(resume);

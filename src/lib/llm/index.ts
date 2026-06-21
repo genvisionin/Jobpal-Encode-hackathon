@@ -139,9 +139,8 @@ export async function parseCVFromPDF(
 
 /**
  * Derive the "career intelligence" layer (archetypes + narrative + quantified
- * proof points) from a structured resume — the equivalent of career-ops's
- * `_profile.md` + `article-digest.md`. Runs once after parsing and is reused on
- * every tailoring run. Never invents content. In production, failures are
+ * proof points) from a structured resume. Runs once after parsing and is reused
+ * on every tailoring run. Never invents content. In production, failures are
  * surfaced instead of silently saving a weak profile, because this layer is what
  * gives the tailoring step high-quality evidence to inject.
  */

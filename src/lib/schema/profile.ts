@@ -1,21 +1,15 @@
 /**
  * profile.ts — the derived "career intelligence" layer.
  *
- * Ported from the career-ops reference, where uploading a resume produces not
- * just a structured CV (`cv.md`) but two derived knowledge files the tailoring
- * step relies on:
+ * Uploading a resume produces not just a structured CV but a derived insights
+ * object the tailoring step relies on: the candidate's target archetypes,
+ * adaptive framing (what to emphasize per role family), the career narrative
+ * that frames summaries, and distilled quantified proof points (the metrics
+ * and evidence the model reuses verbatim and must NEVER invent).
  *
- *   - `_profile.md`        → the candidate's target archetypes, adaptive framing
- *                            (what to emphasize per role family), and the
- *                            through-line / exit narrative that frames summaries.
- *   - `article-digest.md`  → distilled, quantified PROOF POINTS pulled from the
- *                            resume (the metrics + evidence the model must reuse
- *                            verbatim and NEVER invent).
- *
- * We derive an equivalent `ProfileInsights` object with a single Azure LLM pass
- * right after the resume is parsed, persist it alongside the profile, and feed
- * it into every tailoring run. This is what makes tailoring archetype-aware and
- * grounded in real proof points instead of generic keyword stuffing.
+ * Derived with a single Azure LLM pass right after parsing, persisted alongside
+ * the profile, and fed into every tailoring run. Makes tailoring archetype-aware
+ * and grounded in real proof points instead of generic keyword stuffing.
  *
  * Everything is derived ONLY from the resume — no invented metrics, no web
  * research. Fields use the lenient LLM helpers and are all defaulted, so a
@@ -27,7 +21,7 @@ import { llmString, llmStringArray } from "./helpers";
 
 /**
  * A role family the candidate is genuinely competitive for, with how to frame
- * them for it. The career-ops "Your Target Roles" + "Your Adaptive Framing".
+ * them for it — target roles and adaptive framing per archetype.
  */
 export const archetypeSchema = z.object({
   /** Short recruiter-style name, e.g. "Backend Engineer", "Technical Product Manager". */
@@ -39,7 +33,7 @@ export const archetypeSchema = z.object({
 });
 
 /**
- * A distilled, quantified achievement — the `article-digest.md` equivalent.
+ * A distilled, quantified achievement pulled from the resume.
  * These are the real metrics/evidence the tailoring step reuses; it must
  * NEVER invent new ones.
  */

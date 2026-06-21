@@ -47,15 +47,15 @@ export interface StoredTailoredCV {
   templateId: string;
   resume: ResumeData;
   job: JobDescription;
-  /** Confirmed role archetype + how it shaped tailoring (career-ops Step 0). */
+  /** Confirmed role archetype + how it shaped tailoring. */
   archetype?: string;
   archetypeRationale?: string;
   matchScore: number;
-  /** Weighted per-dimension fit (career-ops A–F, adapted). */
+  /** Weighted per-dimension fit breakdown. */
   scoreBreakdown?: FitDimension[];
-  /** Requirement-by-requirement match analysis (career-ops Block B). */
+  /** Requirement-by-requirement match analysis. */
   requirementMatches?: RequirementMatch[];
-  /** Section-level before → after → why edits (career-ops Block E). */
+  /** Section-level before → after → why edits. */
   customizationPlan?: CustomizationChange[];
   changes: string[];
   keywordCoverage: KeywordCoverage[];

@@ -59,7 +59,7 @@ codeplain jobpal.plain --dry-run --no-log-to-file --headless
 ### 1. Customize CV
 Upload a résumé (PDF/DOCX) → text extracted (`unpdf`/`mammoth`) → LLM structures it into the
 base profile. Paste a job description or a job link (ATS APIs + scraper) → LLM tailors the
-résumé using truth-based keyword injection → pick from 6 ATS-friendly HTML templates → live
+résumé with ATS-optimized keyword injection → pick from 6 ATS-friendly HTML templates → live
 preview + print-to-PDF. Every place a résumé appears renders the real template.
 
 ### 2. Job Alerts
@@ -130,10 +130,8 @@ Supabase schema: `supabase/schema.sql`. Vercel cron: `vercel.json` (daily 6am tr
 
 ## Prompt engineering
 
-The résumé-tailoring and email-classification strategies draw on the
-[career-ops](https://github.com/santifer/career-ops) reference: truth-based keyword injection
-(reword real experience using JD vocabulary, never invent), ATS-safe structure, keyword
-distribution, and identifying the hiring company (not the ATS vendor) in emails. See
+Résumé tailoring rewrites real experience using exact JD vocabulary — never invents skills or metrics.
+Email classification identifies the actual hiring company, not the ATS platform. See
 `src/lib/llm/prompts.ts` and `src/lib/tracker/classify.ts`.
 
 ## Not in this beta

@@ -5,7 +5,7 @@
  * Foundry is configured. They use simple heuristics (regex, keyword
  * frequency) that approximate the real prompts: structuring text, deriving
  * career intelligence, pulling JD keywords, and reordering/rewording the
- * resume by relevance — plus a career-ops-style fit analysis.
+ * resume by relevance — plus a multi-dimensional fit analysis.
  *
  * The shapes returned here are identical to the real LLM path, so swapping
  * in Azure changes nothing downstream.
@@ -429,7 +429,7 @@ export function mockTailor(
   const matchedCount = keywordCoverage.filter((k) => k.matched).length;
   const coveragePct = keywords.length ? Math.round((matchedCount / keywords.length) * 100) : 70;
 
-  // --- career-ops-style multi-dimensional score breakdown ---
+  // --- multi-dimensional score breakdown ---
   const skillCorpus = tailored.sections
     .filter((s) => s.kind === "skills")
     .flatMap((s) => s.entries.flatMap((e) => (e.tags.length ? e.tags : e.bullets)))

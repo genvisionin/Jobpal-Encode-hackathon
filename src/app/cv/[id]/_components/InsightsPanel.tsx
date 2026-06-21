@@ -8,11 +8,10 @@ import type {
 } from "@/lib/schema";
 
 /**
- * InsightsPanel — the career-ops-style fit analysis shown beside the tailored
- * resume. Surfaces, top to bottom: the global match + verdict, the detected
- * archetype, the weighted score breakdown (A–F dimensions), the
- * requirement-by-requirement match analysis (Block B), the section-level
- * customization plan (Block E), and JD keyword coverage.
+ * InsightsPanel — the fit analysis shown beside the tailored resume. Surfaces,
+ * top to bottom: the global match + verdict, the detected archetype, the
+ * weighted score breakdown, the requirement-by-requirement match analysis,
+ * the section-level customization plan, and JD keyword coverage.
  *
  * When `locked` (the user's plan doesn't include match ranking), the detailed
  * analysis is replaced by a tasteful upgrade teaser — the resume itself is
@@ -48,7 +47,7 @@ export function InsightsPanel({
   }
   const matched = keywordCoverage.filter((k) => k.matched);
   const missing = keywordCoverage.filter((k) => !k.matched);
-  // career-ops interpretation bands.
+  // match score interpretation bands.
   const verdict =
     matchScore >= 85
       ? "Strong match"

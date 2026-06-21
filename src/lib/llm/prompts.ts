@@ -7,12 +7,10 @@
  * publications, volunteering, languages, custom sections) without dropping
  * anything or hardcoding section types.
  *
- * Tailoring strategy is ported from the career-ops reference and strengthened
- * with the ai-job-search drafter/reviewer workflow:
+ * Tailoring pipeline:
  *   1. PARSE the resume into structured JSON (verbatim, nothing dropped).
  *   2. DERIVE a "career intelligence" layer (archetypes + narrative + quantified
- *      proof points) — the equivalent of career-ops's `_profile.md` +
- *      `article-digest.md`, built once per resume and reused on every tailor.
+ *      proof points) — built once per resume and reused on every tailor.
  *   3. PARSE the JD (incl. archetype + seniority + 15-20 ATS keywords).
  *   4. TAILOR with truth-based keyword injection, relevance-weighted selection,
  *      and an internal reviewer pass. Reword real experience using JD vocabulary,
@@ -113,7 +111,7 @@ ${RESUME_JSON_SHAPE}`;
 
 /* ============================================================
    1c. DERIVE INSIGHTS — structured resume → career intelligence
-   (the career-ops `_profile.md` + `article-digest.md` step)
+   DERIVE INSIGHTS — structured resume → career intelligence
    ============================================================ */
 
 const ARCHETYPE_GUIDE = `An archetype is the role FAMILY a candidate is competitive for, named the way a
@@ -214,10 +212,10 @@ Return ONLY a JSON object with this shape (no commentary, no markdown):
 
 /* ============================================================
    3. TAILOR — base resume + insights + JD → tailored resume + analysis
-   (ports career-ops A-F evaluation / pdf rules + ai-job-search reviewer loop)
+   drafter/reviewer pass with multi-dimensional fit analysis
    ============================================================ */
 
-/** Cliché/corporate-speak ban list, from career-ops `_shared.md`. */
+/** Cliché/corporate-speak ban list. */
 const CLICHE_BANLIST = `passionate about, results-oriented, proven track record, leveraged (use "used" or name the tool),
 spearheaded (use "led" or "ran"), facilitated (use "ran" or "set up"), synergies, robust, seamless,
 cutting-edge, innovative, "in today's fast-paced world", "demonstrated ability to", best practices, go-getter`;
@@ -236,8 +234,7 @@ export function buildTailorMessages(
   },
   insights?: ProfileInsights | null,
 ): ChatMessage[] {
-  const system = `You are an expert resume writer and career strategist. Your tailoring methodology is the
-career-ops standard plus an ai-job-search-style drafter/reviewer pass: detect the role archetype,
+  const system = `You are an expert resume writer and career strategist. Your tailoring methodology uses a drafter/reviewer pass: detect the role archetype,
 map the candidate's real evidence to the job's requirements, draft a targeted ATS resume, critique it
 against the JD, then return the revised final resume and fit analysis.
 
@@ -269,7 +266,7 @@ Think through this privately before producing JSON:
   1. relevance to THIS posting's responsibilities, tools, keywords, and seniority,
   2. uniqueness in the resume (is this the only evidence for an important requirement?),
   3. narrative load (does it support the summary / strongest positioning?).
-- This is relevance-weighted selection from ai-job-search: do not mechanically favor the newest item if an older
+- Use relevance-weighted selection: do not mechanically favor the newest item if an older
   item is the stronger match. A directly relevant older bullet beats a generic newer bullet.
 
 ═══ STEP 3 — REWRITE THE RESUME ═══
@@ -321,7 +318,7 @@ Before finalizing the JSON, review your own draft as a hiring-manager proxy:
    * "Keyword / ATS coverage" (weight 0.25) — share of JD keywords now present in the tailored resume.
    * "Domain & impact" (weight 0.15) — relevant domain, scope, and quantified outcomes (proof points).
 - matchScore: the weighted blend of the four (round to an integer). Be honest — a weak fit scores low.
-  Interpretation guide (career-ops): 85+ strong, 70–84 good, 55–69 partial, <55 weak.
+  Interpretation guide: 85+ strong, 70–84 good, 55–69 partial, <55 weak.
 - requirementMatches: for EACH JD requirement, a row with:
    status ("strong" = clearly evidenced | "partial" = adjacent/implied | "gap" = not present),
    evidence (quote or closely identify the tailored CV line/area supporting it; "" for a gap),
@@ -388,7 +385,7 @@ by relevance; do not invent.`;
 
 /* ============================================================
    4. COVER LETTER — tailored CV + JD → concise application letter
-   (ports ai-job-search cover-letter structure + career-ops proof mapping)
+   COVER LETTER — tailored CV + JD → concise application letter
    ============================================================ */
 
 export function buildCoverLetterMessages(input: {
@@ -399,7 +396,7 @@ export function buildCoverLetterMessages(input: {
   customizationPlan?: CustomizationChange[];
 }): ChatMessage[] {
   const system = `You are an expert job-application writer. Generate a concise, job-specific cover letter
-using the ai-job-search cover-letter principles and the career-ops evidence-mapping rules.
+following structured cover-letter principles with evidence-based writing rules.
 
 INPUTS YOU RECEIVE:
 - TAILORED RESUME: the final CV already rewritten for this job.

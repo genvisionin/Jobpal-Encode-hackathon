@@ -1,9 +1,9 @@
 /**
  * http.ts — shared HTTP helpers for ATS providers (server-only).
  *
- * Ported in spirit from career-ops `providers/_http.mjs`: every provider call
- * is bounded by an AbortController timeout, sends a polite UA, and surfaces a
- * trimmed error on non-2xx. `redirect: "error"` is the default so a board's
+ * Every provider call is bounded by an AbortController timeout, sends a polite
+ * UA, and surfaces a trimmed error on non-2xx. `redirect: "error"` is the
+ * default so a board's
  * server-side redirect can't be used to pivot a fetch to an internal host
  * (SSRF defense-in-depth — hosts are also allowlisted per provider).
  */

@@ -1,10 +1,10 @@
 /**
  * providers/types.ts — the ATS provider plugin contract (server-only).
  *
- * Mirrors career-ops `providers/_types.js`: every provider knows how to turn a
- * board reference (a slug on its platform) into a list of normalized raw jobs.
- * The aggregator (`index.ts`) maps `RawJob` → the UI `JobListing`, so providers
- * stay small and only speak their own platform's JSON.
+ * Every provider knows how to turn a board reference (a slug on its platform)
+ * into a list of normalized raw jobs. The aggregator (`index.ts`) maps
+ * `RawJob` → the UI `JobListing`, so providers stay small and only speak
+ * their own platform's JSON.
  */
 
 import type { FetchOpts } from "./http";

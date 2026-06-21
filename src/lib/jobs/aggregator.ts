@@ -1,17 +1,16 @@
 /**
  * aggregator.ts — the real job provider (server-only).
  *
- * This is the Jobpal equivalent of career-ops `scan.mjs`: fan out across a
- * registry of company ATS boards, pull live postings over each platform's
- * public JSON API, normalize to the feed shape, then apply the user's filters,
- * dedup, and paginate.
+ * Fan out across a registry of company ATS boards, pull live postings over
+ * each platform's public JSON API, normalize to the feed shape, then apply
+ * the user's filters, dedup, and paginate.
  *
  * Design notes:
  *   - Board selection is biased by the user's country + keyword industries so a
  *     query touches a relevant ~25-40 boards, not all of them, keeping latency
  *     and load bounded. A broad/empty query widens the net.
  *   - Each board fetch is independently timed out and failure-isolated — one
- *     dead board never sinks the search (career-ops's "continue on error").
+ *     dead board never sinks the search.
  *   - Per-board responses are cached briefly so repeated/refined searches and
  *     pagination don't re-hit the same APIs.
  *   - Concurrency is capped so we never open 100 sockets at once.

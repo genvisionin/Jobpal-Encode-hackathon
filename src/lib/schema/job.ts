@@ -1,8 +1,7 @@
 /**
  * job.ts — schemas for a parsed job description and the tailoring result.
  *
- * The tailoring result shape is ported from the career-ops reference's
- * evaluation model (blocks A–F): an archetype, a weighted multi-dimensional
+ * The tailoring result includes an archetype, a weighted multi-dimensional
  * fit breakdown, a requirement-by-requirement match analysis with gap
  * mitigation, and a section-level customization plan (before → after → why).
  *
@@ -24,7 +23,7 @@ export const jobDescriptionSchema = z.object({
   arrangement: llmString(),
   salary: llmString(),
   /**
-   * Role archetype/family detected from the JD (career-ops "Step 0"), e.g.
+   * Role archetype/family detected from the JD, e.g.
    * "Backend Engineer", "Product Designer", "Forward-Deployed Engineer".
    * Drives which proof points to surface and how the summary is framed.
    */
@@ -51,9 +50,8 @@ export const keywordCoverageSchema = z.object({
 });
 
 /**
- * One dimension of the fit score (career-ops blocks A–F, adapted to a
- * CV-tailoring context where only the CV + JD are available — no comp/web
- * research). `matchScore` is the weighted blend of these.
+ * One dimension of the fit score (adapted to a CV-tailoring context where
+ * only the CV + JD are available). `matchScore` is the weighted blend of these.
  */
 export const fitDimensionSchema = z.object({
   /** e.g. "Skills match", "Experience relevance", "Keyword / ATS coverage", "Seniority fit". */
@@ -67,8 +65,8 @@ export const fitDimensionSchema = z.object({
 });
 
 /**
- * career-ops Block B — each JD requirement mapped to CV evidence, with a
- * status and (for gaps) a concrete mitigation strategy.
+ * Each JD requirement mapped to CV evidence, with a status and (for gaps)
+ * a concrete mitigation strategy.
  */
 export const requirementMatchSchema = z.object({
   requirement: llmString(),
@@ -81,8 +79,8 @@ export const requirementMatchSchema = z.object({
 });
 
 /**
- * career-ops Block E — the customization plan. One row per concrete edit
- * made to the resume: which section, what it said, what it now says, and why.
+ * The customization plan. One row per concrete edit made to the resume:
+ * which section, what it said, what it now says, and why.
  */
 export const customizationChangeSchema = z.object({
   /** e.g. "Professional Summary", "Experience — Acme Corp", "Skills". */
@@ -105,11 +103,11 @@ export const tailorResultSchema = z.object({
   archetypeRationale: llmString(),
   /** Global 0–100 fit, the weighted blend of `scoreBreakdown`. */
   matchScore: llmNumber(0, 0, 100),
-  /** Weighted per-dimension fit (career-ops A–F, adapted). */
+  /** Weighted per-dimension fit breakdown. */
   scoreBreakdown: z.array(fitDimensionSchema).default([]),
-  /** Requirement-by-requirement match analysis with gap mitigation (Block B). */
+  /** Requirement-by-requirement match analysis with gap mitigation. */
   requirementMatches: z.array(requirementMatchSchema).default([]),
-  /** Section-level before → after → why edits (Block E). */
+  /** Section-level before → after → why edits. */
   customizationPlan: z.array(customizationChangeSchema).default([]),
   /** Human-readable summary of edits made (the "what we changed" list). */
   changes: llmStringArray(),

@@ -18,7 +18,7 @@ export type PlanId = "free" | "pro" | "premium";
 
 /** Feature flags a plan can unlock. Add new gated capabilities here. */
 export type FeatureId =
-  /** The career-ops A–F fit analysis + match ranking on a tailored CV. */
+  /** Multi-dimensional fit analysis + match ranking on a tailored CV. */
   | "ranking"
   /** Automatic application tracking by linking a Gmail inbox. */
   | "gmail_tracker"

@@ -329,12 +329,10 @@ export function ProfileView({
 }
 
 /**
- * CareerIntelligence — surfaces the derived "career intelligence" layer
- * (the career-ops `_profile.md` + `article-digest.md` equivalent): the
- * candidate's positioning headline, the role archetypes they're competitive
- * for, and the quantified proof points the tailoring step reuses. This is
- * auto-generated from the resume on upload, so users see exactly what the
- * tailoring engine knows about them.
+ * CareerIntelligence — surfaces the derived "career intelligence" layer:
+ * the candidate's positioning headline, the role archetypes they're competitive
+ * for, and the quantified proof points the tailoring step reuses. Auto-generated
+ * from the resume on upload so users see exactly what the tailoring engine knows.
  */
 function CareerIntelligence({ insights }: { insights: ProfileInsights }) {
   return (

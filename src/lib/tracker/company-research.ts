@@ -1,8 +1,7 @@
 /**
  * company-research.ts — real web grounding for the interview prep pack.
  *
- * SERVER-ONLY (network + HTML scraping). Inspired by the career-ops
- * `interview-prep` mode's research step: instead of asking the model to recall
+ * SERVER-ONLY (network + HTML scraping). Instead of asking the model to recall
  * a company from memory (which fails for small/new companies), we run targeted
  * public web searches across the places candidates actually talk — Glassdoor,
  * Blind (teamblind), Reddit, Levels.fyi, LeetCode discuss — plus the company's

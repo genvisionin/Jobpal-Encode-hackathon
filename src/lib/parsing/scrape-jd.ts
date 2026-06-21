@@ -1,7 +1,7 @@
 /**
  * scrape-jd.ts — extract job-description text from a URL.
  *
- * Strategy (ported from the career-ops reference's provider approach):
+ * Strategy:
  *   1. ATS JSON APIs first — Greenhouse, Lever, Ashby expose clean JSON for
  *      a posting, which is far more reliable than scraping rendered HTML.
  *   2. Generic fetch + cheerio fallback — strip nav/script/style and pull

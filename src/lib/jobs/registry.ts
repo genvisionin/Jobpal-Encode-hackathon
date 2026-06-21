@@ -1,10 +1,9 @@
 /**
  * registry.ts — the tracked-company board registry (server-only).
  *
- * Equivalent of career-ops `portals.yml` → `tracked_companies`, but every entry
- * here was verified to return live postings from its ATS public API. Each board
- * is one company on one platform; the aggregator fans out across the relevant
- * subset per search and normalizes results into the feed.
+ * Every entry was verified to return live postings from its ATS public API.
+ * Each board is one company on one platform; the aggregator fans out across
+ * the relevant subset per search and normalizes results into the feed.
  *
  * Region/industry tags let the aggregator bias board selection toward the user's
  * country and keywords so we don't hammer all ~120 boards on every query.

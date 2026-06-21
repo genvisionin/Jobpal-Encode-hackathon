@@ -4,8 +4,8 @@
  *
  * ATS feeds rarely tag arrangement / seniority / job-type uniformly, so we
  * infer them from the title + location + the platform's own hints. Inference is
- * deliberately lenient: an undetectable signal never drops a job from a filter
- * (mirrors career-ops's "empty location passes" rule), it just won't add a tag.
+ * deliberately lenient: an undetectable signal never drops a job from a filter,
+ * it just won't add a tag.
  */
 
 import type { RawJob } from "./providers/types";
